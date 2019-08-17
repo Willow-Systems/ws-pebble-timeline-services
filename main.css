@@ -1,0 +1,25 @@
+body {
+	font-family: "Roboto","sans-serif";
+}
+.center {
+	text-align: center;
+	}
+.smaller {
+	max-width: 70%;
+	text-align: left;
+	}
+small {
+	cursor: pointer;
+}
+.footer {
+										 position: absolute;
+										 bottom: 0;
+										 height: 40px;
+										 margin-top: 40px;
+										 width: 100%;
+										 text-align: center;
+						 }
+.spinner-border {
+	height: 1rem !important;
+	width: 1rem !important;
+}
