@@ -1,14 +1,13 @@
 const express = require('express');
 const https = require('https');
 const fs = require('fs');
-const cors = require('cors');
 const app = express();
 const port = 444;
 debug = true
 
 //Set paths to https privkey and cert here
-var PATH_TLSPrivateKey = "";
-var PATH_TLSCertificate = "";
+var PATH_TLSPrivateKey = "/mnt/secure/will0-certs/privkey.pem";
+var PATH_TLSCertificate = "/mnt/secure/will0-certs/cert.pem";
 
 var privateKey = fs.readFileSync(PATH_TLSPrivateKey);
 var certificate = fs.readFileSync(PATH_TLSCertificate);
@@ -27,14 +26,10 @@ app.use(function(req, res, next) {
   });
 });
 
-app.use(cors({
-  origin: 'https://127.0.0.1'
-}));
-
-app.get("/",function () {
+app.get("/",function (req,res) {
 	res.end('<meta http-equiv="refresh" content="0; url=https://willow.systems/pebble/timeline-tester">');
 });
-app.get("*",function () {
+app.get("*",function (req,res) {
 	res.end('<meta http-equiv="refresh" content="0; url=https://willow.systems/pebble/timeline-tester">');
 });
 
