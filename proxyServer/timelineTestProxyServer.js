@@ -1,16 +1,34 @@
 const express = require('express');
 const https = require('https');
 const fs = require('fs');
+const cors = require('cors');
 const app = express();
-const port = 444;
+
+//Port to listen on
+const port = 8080;
+
+//More logging
 debug = true
 
-//Set paths to https privkey and cert here
-var PATH_TLSPrivateKey = "/mnt/secure/will0-certs/privkey.pem";
-var PATH_TLSCertificate = "/mnt/secure/will0-certs/cert.pem";
+//If you're not running this behind a reverse proxy, you should use https
+use_https = false
 
-var privateKey = fs.readFileSync(PATH_TLSPrivateKey);
-var certificate = fs.readFileSync(PATH_TLSCertificate);
+//Set paths to https privkey and cert here (only needed if use_https is true)
+var PATH_TLSPrivateKey = "";
+var PATH_TLSCertificate = "";
+
+//If you're not using a reverse proxy, you'll probably need to setup cors with the address of whatever is serving the html
+//app.use(cors({
+//  origin: 'https://127.0.0.1'
+//}));
+
+
+//Don't change anything beneath this line now plz
+
+if (use_https) {
+  var privateKey = fs.readFileSync(PATH_TLSPrivateKey);
+  var certificate = fs.readFileSync(PATH_TLSCertificate);
+}
 
 //Custom middleware to let us get the whole post body
 app.use(function(req, res, next) {
@@ -26,10 +44,13 @@ app.use(function(req, res, next) {
   });
 });
 
-app.get("/",function (req,res) {
+app.get("/ping",function (req, res) {
+	res.end("pong");
+});
+app.get("/",function (req, res) {
 	res.end('<meta http-equiv="refresh" content="0; url=https://willow.systems/pebble/timeline-tester">');
 });
-app.get("*",function (req,res) {
+app.get("*",function (req, res) {
 	res.end('<meta http-equiv="refresh" content="0; url=https://willow.systems/pebble/timeline-tester">');
 });
 
@@ -145,16 +166,21 @@ function submitPinToRWS_cb(data, cbo) {
 }
 function submitPinToRWS_ecb(data, cbo) {
   cbo.status(500);
-  cbo.end("Pin creation error: " + data);
+  cbo.end("Rebble Web Services returned the following error: " + data);
 }
 
-
 function startListening() {
-  https.createServer({
-	   key: privateKey,
-	    cert: certificate
-  }, app).listen(port);
-  console.log("Started")
+  if (use_https) {
+    https.createServer({
+    	   key: privateKey,
+    	    cert: certificate
+    }, app).listen(port);
+  } else {
+    app.listen(port,function(){
+     console.log("Listening on port " + port);
+    });
+    console.log("Not using HTTPS! Ensure you're running behind a reverse proxy")
+  }
 }
 
 startListening();
