@@ -1,5 +1,5 @@
-# Pebble - Timeline Tester 
-Version 1.0
+# Pebble - Timeline Tester
+Version 1.1
 ## About
 
 Timeline Tester is a simple webapp that lets you easily create a timeline pin for pebble.
@@ -16,7 +16,9 @@ The code is made of two parts, the 'webapp', which is an html page and a little 
 
 `npm install express https fs cors`
 
-Deploying is pretty simple, put the contents of /site on a web server, and update main.js to point to where you'll be running the nodejs app. Then update the nodejs app in /proxyServer to include your SSL cert and key, or alternativly rewrite the express listen code at the bottom to just use plain http and put it behind a reverse proxy (that's what I ended up doing)
+Deploying is pretty simple, put the contents of /site on a web server, and update main.js to point to where you'll be running the nodejs app.
+
+Then configure the nodejs app in /proxyServer to include your SSL cert and key, or alternatively set use_https to no and run it behind a reverse proxy (that's what I ended up doing).
 
 ## Using the tester
 
