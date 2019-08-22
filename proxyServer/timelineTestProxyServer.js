@@ -27,6 +27,10 @@ var PATH_TLSCertificate = "";
 
 var stats = {};
 stats.requests = 0;
+stats["200"] = 0;
+stats["400"] = 0;
+stats["410"] = 0;
+stats["500"] = 0;
 
 if (use_https) {
   var privateKey = fs.readFileSync(PATH_TLSPrivateKey);
@@ -74,7 +78,7 @@ app.get("/pinproxy/stats", function (req,res) {
         var output = "";
         for (var key in stats) {
             if (stats.hasOwnProperty(key)) {
-                output = output + (key + " -> " + stats[key]);
+                output = output + (key + " -> " + stats[key] + "  ");
             }
         }
         res.end(output);
@@ -127,11 +131,28 @@ app.post('/pinproxy/:id',function(req,res){
   if (pin.layout.title == null) {
     pin.layout.title = ""
   }
+  if (pin.layout.title.toString().length > 512) {
+    res.status(413);
+    endAndLog("Pin Title is too long (Max 512 character)", res);
+    return
+  }
+
   if (pin.layout.body == null) {
     pin.layout.body = ""
   }
+  if (pin.layout.body.toString().length > 512) {
+    res.status(413);
+    endAndLog("Pin Body is too long (Max 512 character)", res);
+    return
+  }
+
   if (pin.layout.subtitle == null) {
     pin.layout.subtitle = ""
+  }
+  if (pin.layout.subtite.toString().length > 512) {
+    res.status(413);
+    endAndLog("Pin Subtitle is too long (Max 512 character)", res);
+    return
   }
 
   if (pin.layout.tinyIcon == null || pin.layout.tinyIcon == "") {
@@ -192,11 +213,28 @@ app.post('/pinproxy-ifttt',function(req,res){
   if (pin.layout.title == null) {
     pin.layout.title = ""
   }
+  if (pin.layout.title.toString().length > 512) {
+    res.status(413);
+    endAndLog("Pin Title is too long (Max 512 character)", res);
+    return
+  }
+
   if (pin.layout.body == null) {
     pin.layout.body = ""
   }
+  if (pin.layout.body.toString().length > 512) {
+    res.status(413);
+    endAndLog("Pin Body is too long (Max 512 character)", res);
+    return
+  }
+
   if (pin.layout.subtitle == null) {
     pin.layout.subtitle = ""
+  }
+  if (pin.layout.subtite.toString().length > 512) {
+    res.status(413);
+    endAndLog("Pin Subtitle is too long (Max 512 character)", res);
+    return
   }
 
   if (pin.layout.tinyIcon == null || pin.layout.tinyIcon == "") {
