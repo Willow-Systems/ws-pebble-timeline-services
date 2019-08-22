@@ -25,6 +25,9 @@ var PATH_TLSCertificate = "";
 
 //Don't change anything beneath this line now plz
 
+var stats = {};
+stats.requests = 0;
+
 if (use_https) {
   var privateKey = fs.readFileSync(PATH_TLSPrivateKey);
   var certificate = fs.readFileSync(PATH_TLSCertificate);
@@ -44,8 +47,37 @@ app.use(function(req, res, next) {
   });
 });
 
+function uuidv4() {
+  return 'xxxxxxxx-xxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+function addMinutes(date, minutes) {
+    return new Date(date.getTime() + minutes*60000);
+}
+function log(data) {
+  console.log("[" + Date() + "] " + data);
+}
+function endAndLog(msg, res) {
+  log("ifttt::end::msg:" + msg)
+  res.end(msg);
+}
+
 app.get("/ping",function (req, res) {
 	res.end("pong");
+});
+app.get("/pinproxy/ping",function (req, res) {
+        res.end("pong");
+});
+app.get("/pinproxy/stats", function (req,res) {
+        var output = "";
+        for (var key in stats) {
+            if (stats.hasOwnProperty(key)) {
+                output = output + (key + " -> " + stats[key]);
+            }
+        }
+        res.end(output);
 });
 app.get("/",function (req, res) {
 	res.end('<meta http-equiv="refresh" content="0; url=https://willow.systems/pebble/timeline-tester">');
@@ -71,21 +103,25 @@ app.post('/pinproxy/:id',function(req,res){
   if (req.params.id != pin.id) {
     res.status(400);
     res.end("Pin ID in JSON doesn't match Pin ID in request URL");
+    return
   }
 
   if (pin.time == null || pin.time == "") {
     res.status(400);
     res.end("Pin Time missing");
+    return
   }
 
   if (pin.layout == null) {
     res.status(400);
     res.end("Pin Layout is blank");
+    return
   }
 
   if (pin.layout.type != "genericPin") {
     res.status(400);
-    res.end("Pin Layout time is blank or set to a currently unsupported type");
+    res.end("Pin Layout is blank or set to a currently unsupported type");
+    return
   }
 
   if (pin.layout.title == null) {
@@ -101,6 +137,7 @@ app.post('/pinproxy/:id',function(req,res){
   if (pin.layout.tinyIcon == null || pin.layout.tinyIcon == "") {
     res.status(400);
     res.end("Pin icon is missing");
+    return
   }
 
   console.log(`${pin.id}::validatePin::pinValid`)
@@ -110,10 +147,86 @@ app.post('/pinproxy/:id',function(req,res){
 
 
 });
+app.post('/pinproxy-ifttt',function(req,res){
+
+  //Designed to be used as a proxy for ifttt webhooks, we'll generate the token here
+
+	pin = JSON.parse(req.rawBody);
+
+  pin.id = "ws-ifttt-" + uuidv4();
+
+  //Check that everything is there
+  log(`${pin.id}::ifttt::createPin`);
+  log(`${pin.id}::ifttt::validatePin`);
+
+  if (pin.time == null || pin.time == "") {
+    res.status(400);
+    endAndLog("Pin Time missing", res);
+    return
+  }
+
+  if (pin.token == null || pin.token == "") {
+    res.status(400);
+    endAndLog("Pin Token missing", res);
+    return
+  }
+
+  if (["1","2","3"].indexOf(pin.time) == -1) {
+    res.status(400);
+    endAndLog("Pin Time is invalid (" + pin.time + ")", res);
+    return
+  }
+
+  if (pin.layout == null) {
+    res.status(400);
+    endAndLog("Pin Layout is blank", res);
+    return
+  }
+
+  if (pin.layout.type != "genericPin") {
+    res.status(400);
+    endAndLog("Pin Layout is blank or set to a currently unsupported type", res);
+    return
+  }
+
+  if (pin.layout.title == null) {
+    pin.layout.title = ""
+  }
+  if (pin.layout.body == null) {
+    pin.layout.body = ""
+  }
+  if (pin.layout.subtitle == null) {
+    pin.layout.subtitle = ""
+  }
+
+  if (pin.layout.tinyIcon == null || pin.layout.tinyIcon == "") {
+    res.status(400);
+    endAndLog("Pin icon is missing", res);
+    return
+  }
+
+  log(`${pin.id}::ifttt::validatePin::pinValid`)
+
+
+  var time = new Date();
+
+  if (pin.time == "2") {
+    time = addMinutes(time, 30);
+  } else if (pin.time == "3") {
+    time = addMinutes(time, 60);
+  }
+
+  pin.time = time.toISOString();
+
+  //If we're here, all is good.
+  submitPinToRWS(pin,submitPinToRWS_cb, submitPinToRWS_ecb, res);
+
+
+});
 
 function submitPinToRWS(pinData, callBack, errorCallBack, callBackObject ) {
 
-  console.log(`${pin.id}::submitPin`)
+  log(`${pin.id}::submitPin`)
 
   var data = JSON.stringify(pinData)
 
@@ -131,20 +244,21 @@ function submitPinToRWS(pinData, callBack, errorCallBack, callBackObject ) {
   }
 
   if (debug) {
-    console.log(`${pin.id}::debug::requestOptions:${JSON.stringify(options)}`);
-    console.log(`${pin.id}::debug::pinData:${data}`);
+    log(`${pin.id}::debug::requestOptions:${JSON.stringify(options)}`);
+    log(`${pin.id}::debug::pinData:${data}`);
   }
 
   const req = https.request(options, (res) => {
-    console.log(`${pinData.id}::submitPin::rwscode:${res.statusCode}`)
+    log(`${pinData.id}::submitPin::rwscode:${res.statusCode}`)
+    stats[res.statusCode.toString()] += 1;
 
     res.on('data', (d) => {
       if (res.statusCode != "200") {
-        console.log(`${pin.id}::submitPin::errorcode:` + res.statusCode);
+        log(`${pin.id}::submitPin::errorcode:` + res.statusCode);
         errorCallBack(d, callBackObject);
       } else {
-        console.log(`${pin.id}::submitPin::success`);
-        console.log(`${pinData.id}::submitPin::data:${d}`)
+        log(`${pin.id}::submitPin::success`);
+        log(`${pinData.id}::submitPin::data:${d}`)
         callBack(d, callBackObject);
       }
 
@@ -152,10 +266,11 @@ function submitPinToRWS(pinData, callBack, errorCallBack, callBackObject ) {
   })
 
   req.on('error', (error) => {
-    console.log(`${pin.id}::submitPin::error:` + error);
+    log(`${pin.id}::submitPin::error:` + error);
     errorCallBack(error, callBackObject);
   })
 
+  stats.requests += 1;
   req.write(data)
   req.end()
 
