@@ -31,6 +31,7 @@ stats["200"] = 0;
 stats["400"] = 0;
 stats["410"] = 0;
 stats["500"] = 0;
+stats["rejected"] = 0;
 
 if (use_https) {
   var privateKey = fs.readFileSync(PATH_TLSPrivateKey);
@@ -65,6 +66,7 @@ function log(data) {
 }
 function endAndLog(msg, res) {
   log("ifttt::end::msg:" + msg)
+  stats["rejected"] += 1;
   res.end(msg);
 }
 
@@ -101,8 +103,8 @@ app.post('/pinproxy/:id',function(req,res){
     res.end("Pin ID missing");
   }
 
-  console.log(`${pin.id}::createPin`);
-  console.log(`${pin.id}::validatePin`);
+  log(`${pin.id}::createPin`);
+  log(`${pin.id}::validatePin`);
 
   if (req.params.id != pin.id) {
     res.status(400);
@@ -131,7 +133,7 @@ app.post('/pinproxy/:id',function(req,res){
   if (pin.layout.title == null) {
     pin.layout.title = ""
   }
-  if (pin.layout.title.toString().length > 512) {
+  if (pin.layout.title != null && pin.layout.title.toString().length > 512) {
     res.status(413);
     endAndLog("Pin Title is too long (Max 512 character)", res);
     return
@@ -140,7 +142,7 @@ app.post('/pinproxy/:id',function(req,res){
   if (pin.layout.body == null) {
     pin.layout.body = ""
   }
-  if (pin.layout.body.toString().length > 512) {
+  if (pin.layout.body != null && pin.layout.body.toString().length > 512) {
     res.status(413);
     endAndLog("Pin Body is too long (Max 512 character)", res);
     return
@@ -149,7 +151,7 @@ app.post('/pinproxy/:id',function(req,res){
   if (pin.layout.subtitle == null) {
     pin.layout.subtitle = ""
   }
-  if (pin.layout.subtite.toString().length > 512) {
+  if (pin.layout.subtitle != null && pin.layout.subtitle.toString().length > 512) {
     res.status(413);
     endAndLog("Pin Subtitle is too long (Max 512 character)", res);
     return
@@ -161,7 +163,7 @@ app.post('/pinproxy/:id',function(req,res){
     return
   }
 
-  console.log(`${pin.id}::validatePin::pinValid`)
+  log(`${pin.id}::validatePin::pinValid`)
 
   //If we're here, all is good.
   submitPinToRWS(pin,submitPinToRWS_cb, submitPinToRWS_ecb, res);
@@ -330,11 +332,11 @@ function startListening() {
     }, app).listen(port);
   } else {
     app.listen(port,function(){
-     console.log("Listening on port " + port);
+     log("Listening on port " + port);
     });
-    console.log("Not using HTTPS! Ensure you're running behind a reverse proxy")
+    log("Not using HTTPS! Ensure you're running behind a reverse proxy")
   }
 }
 
 startListening();
-if (debug) { console.log("Debug Mode On") }
+if (debug) { log("Debug Mode On") }
