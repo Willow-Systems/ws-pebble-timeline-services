@@ -26,12 +26,13 @@ var PATH_TLSCertificate = "";
 //Don't change anything beneath this line now plz
 
 var stats = {};
-stats.requests = 0;
+stats["outgoingRequests"] = 0;
 stats["200"] = 0;
 stats["400"] = 0;
 stats["410"] = 0;
 stats["500"] = 0;
-stats["rejected"] = 0;
+stats["rejectedRequests"] = 0;
+stats["incomingRequests"] = 0;
 
 if (use_https) {
   var privateKey = fs.readFileSync(PATH_TLSPrivateKey);
@@ -66,7 +67,7 @@ function log(data) {
 }
 function endAndLog(msg, res) {
   log("ifttt::end::msg:" + msg)
-  stats["rejected"] += 1;
+  stats["rejectedRequests"] += 1;
   res.end(msg);
 }
 
@@ -77,13 +78,13 @@ app.get("/pinproxy/ping",function (req, res) {
         res.end("pong");
 });
 app.get("/pinproxy/stats", function (req,res) {
-        var output = "";
-        for (var key in stats) {
-            if (stats.hasOwnProperty(key)) {
-                output = output + (key + " -> " + stats[key] + "  ");
-            }
-        }
-        res.end(output);
+        // var output = "";
+        // for (var key in stats) {
+        //     if (stats.hasOwnProperty(key)) {
+        //         output = output + (key + " -> " + stats[key] + "  ");
+        //     }
+        // }
+        res.end(JSON.stringify(stats));
 });
 app.get("/",function (req, res) {
 	res.end('<meta http-equiv="refresh" content="0; url=https://willow.systems/pebble/timeline-tester">');
@@ -94,7 +95,7 @@ app.get("*",function (req, res) {
 
 app.post('/pinproxy/:id',function(req,res){
 
-
+  stats["incomingRequests"] += 1;
 	pin = JSON.parse(req.rawBody);
 
   //Check that everything is there
@@ -172,6 +173,7 @@ app.post('/pinproxy/:id',function(req,res){
 });
 app.post('/pinproxy-ifttt',function(req,res){
 
+  stats["incomingRequests"] += 1;
   //Designed to be used as a proxy for ifttt webhooks, we'll generate the token here
 
 	pin = JSON.parse(req.rawBody);
@@ -311,7 +313,7 @@ function submitPinToRWS(pinData, callBack, errorCallBack, callBackObject ) {
     errorCallBack(error, callBackObject);
   })
 
-  stats.requests += 1;
+  stats.outgoingRequests += 1;
   req.write(data)
   req.end()
 
