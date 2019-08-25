@@ -224,7 +224,7 @@ app.post('/pinproxy-ifttt',function(req,res){
   if (pin.layout.body == null) {
     pin.layout.body = ""
   }
-  if (pin.layout.body.toString().length > 512) {
+  if (pin.layout.body != null && pin.layout.body.toString().length > 512) {
     res.status(413);
     endAndLog("Pin Body is too long (Max 512 character)", res);
     return
@@ -233,7 +233,7 @@ app.post('/pinproxy-ifttt',function(req,res){
   if (pin.layout.subtitle == null) {
     pin.layout.subtitle = ""
   }
-  if (pin.layout.subtite.toString().length > 512) {
+  if (pin.layout.subtitle != null && pin.layout.subtitle.toString().length > 512) {
     res.status(413);
     endAndLog("Pin Subtitle is too long (Max 512 character)", res);
     return
@@ -241,9 +241,10 @@ app.post('/pinproxy-ifttt',function(req,res){
 
   if (pin.layout.tinyIcon == null || pin.layout.tinyIcon == "") {
     res.status(400);
-    endAndLog("Pin icon is missing", res);
+    res.end("Pin icon is missing");
     return
   }
+
 
   log(`${pin.id}::ifttt::validatePin::pinValid`)
 
