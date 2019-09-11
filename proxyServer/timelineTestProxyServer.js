@@ -1,21 +1,25 @@
 const express = require('express');
 const https = require('https');
+const Entities = require('html-entities').AllHtmlEntities;
+const entities = new Entities();
 const fs = require('fs');
 const cors = require('cors');
 const app = express();
 
+version = 1.7;
+
 //Port to listen on
-const port = 8080;
+const port = 444;
 
 //More logging
 debug = true
 
 //If you're not running this behind a reverse proxy, you should use https
-use_https = false
+use_https = true
 
 //Set paths to https privkey and cert here (only needed if use_https is true)
-var PATH_TLSPrivateKey = "";
-var PATH_TLSCertificate = "";
+var PATH_TLSPrivateKey = "/home/will/Documents/secure/will0.id/privkey.pem";
+var PATH_TLSCertificate = "/home/will/Documents/secure/will0.id/cert.pem";
 
 //If you're not using a reverse proxy, you'll probably need to setup cors with the address of whatever is serving the html
 //app.use(cors({
@@ -26,13 +30,14 @@ var PATH_TLSCertificate = "";
 //Don't change anything beneath this line now plz
 
 var stats = {};
-stats["outgoingRequests"] = 0;
-stats["200"] = 0;
-stats["400"] = 0;
+stats["outgoingRequests"] = 37;
+stats["200"] = 20;
+stats["400"] = 16;
 stats["410"] = 0;
 stats["500"] = 0;
-stats["rejectedRequests"] = 0;
-stats["incomingRequests"] = 0;
+stats["rejectedRequests"] = 1;
+stats["incomingRequests"] = 38;
+stats.serverVersion = version;
 
 if (use_https) {
   var privateKey = fs.readFileSync(PATH_TLSPrivateKey);
@@ -166,6 +171,12 @@ app.post('/pinproxy/:id',function(req,res){
 
   log(`${pin.id}::validatePin::pinValid`)
 
+  // log(`${pin.id}::ifttt::escapePin`);
+  // pin.layout.title = entities.encode(pin.layout.title);
+  // pin.layout.subtitle = entities.encode(pin.layout.subtitle);
+  // pin.layout.body = entities.encode(pin.layout.body);
+  // log(`${pin.id}::ifttt::escapePin::pinEscaped`);
+
   //If we're here, all is good.
   submitPinToRWS(pin,submitPinToRWS_cb, submitPinToRWS_ecb, res);
 
@@ -176,7 +187,10 @@ app.post('/pinproxy-ifttt',function(req,res){
   stats["incomingRequests"] += 1;
   //Designed to be used as a proxy for ifttt webhooks, we'll generate the token here
 
-	pin = JSON.parse(req.rawBody);
+  if (debug) {
+	log("Parsing: " + req.rawbody);
+  }
+  pin = JSON.parse(req.rawBody);
 
   pin.id = "ws-ifttt-" + uuidv4();
 
@@ -250,6 +264,13 @@ app.post('/pinproxy-ifttt',function(req,res){
 
   log(`${pin.id}::ifttt::validatePin::pinValid`)
 
+  log(`${pin.id}::ifttt::escapePin`);
+  fields = ["title","body","subtitle"]
+  for(let i = 0; i < fields.length; i++){
+    pin["layout." + fields[i].toString()] = escape(pin["layout." + fields[i].toString()]);
+  }
+  log(`${pin.id}::ifttt::escapePin::pinEscaped`);
+
 
   var time = new Date();
 
@@ -272,6 +293,8 @@ function submitPinToRWS(pinData, callBack, errorCallBack, callBackObject ) {
   log(`${pin.id}::submitPin`)
 
   var data = JSON.stringify(pinData)
+
+  // data = encodeURI(data);
 
   //hostname: 'local.will0.id',
   const options = {
@@ -324,6 +347,7 @@ function submitPinToRWS_cb(data, cbo) {
 }
 function submitPinToRWS_ecb(data, cbo) {
   cbo.status(500);
+  log("RWS Error msg: " + data);
   cbo.end("Rebble Web Services returned the following error: " + data);
 }
 
