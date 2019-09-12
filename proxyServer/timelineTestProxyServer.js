@@ -9,17 +9,17 @@ const app = express();
 version = 1.7;
 
 //Port to listen on
-const port = 444;
+const port = 8080;
 
 //More logging
 debug = true
 
 //If you're not running this behind a reverse proxy, you should use https
-use_https = true
+use_https = false
 
 //Set paths to https privkey and cert here (only needed if use_https is true)
-var PATH_TLSPrivateKey = "/home/will/Documents/secure/will0.id/privkey.pem";
-var PATH_TLSCertificate = "/home/will/Documents/secure/will0.id/cert.pem";
+var PATH_TLSPrivateKey = "";
+var PATH_TLSCertificate = "";
 
 //If you're not using a reverse proxy, you'll probably need to setup cors with the address of whatever is serving the html
 //app.use(cors({
@@ -30,13 +30,13 @@ var PATH_TLSCertificate = "/home/will/Documents/secure/will0.id/cert.pem";
 //Don't change anything beneath this line now plz
 
 var stats = {};
-stats["outgoingRequests"] = 37;
-stats["200"] = 20;
-stats["400"] = 16;
+stats["outgoingRequests"] = 0;
+stats["200"] = 0;
+stats["400"] = 0;
 stats["410"] = 0;
 stats["500"] = 0;
-stats["rejectedRequests"] = 1;
-stats["incomingRequests"] = 38;
+stats["rejectedRequests"] = 0;
+stats["incomingRequests"] = 0;
 stats.serverVersion = version;
 
 if (use_https) {
@@ -101,7 +101,21 @@ app.get("*",function (req, res) {
 app.post('/pinproxy/:id',function(req,res){
 
   stats["incomingRequests"] += 1;
-	pin = JSON.parse(req.rawBody);
+
+
+  if (req.rawBody == null || req.rawBody == "") {
+	res.status(400)
+	endAndLog("Request body was blank!", res);
+	return
+  }
+
+  try {
+	  pin = JSON.parse(req.rawBody);
+  } catch(e) {
+          res.status(400);
+	  endAndLog("JSON Parse error: " + e, res);
+	  return;
+  }
 
   //Check that everything is there
   if (pin.id == null || pin.id == "") {
@@ -188,9 +202,21 @@ app.post('/pinproxy-ifttt',function(req,res){
   //Designed to be used as a proxy for ifttt webhooks, we'll generate the token here
 
   if (debug) {
-	log("Parsing: " + req.rawbody);
+	log("ifttt:start::parse: " + req.rawBody);
   }
-  pin = JSON.parse(req.rawBody);
+
+  if (req.rawBody == null || req.rawBody == "") {
+	res.status(400)
+	endAndLog("Request body was blank!", res);
+	return
+  }
+  try {
+	  pin = JSON.parse(req.rawBody);
+  } catch(e) {
+	  res.status(400)
+	  endAndLog("JSON Parse error: " + e, res);
+	  return
+  }
 
   pin.id = "ws-ifttt-" + uuidv4();
 
