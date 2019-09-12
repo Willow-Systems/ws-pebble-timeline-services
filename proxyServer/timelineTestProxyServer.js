@@ -1,8 +1,12 @@
 const express = require('express');
 const https = require('https');
+const Entities = require('html-entities').AllHtmlEntities;
+const entities = new Entities();
 const fs = require('fs');
 const cors = require('cors');
 const app = express();
+
+version = 1.7;
 
 //Port to listen on
 const port = 8080;
@@ -33,6 +37,7 @@ stats["410"] = 0;
 stats["500"] = 0;
 stats["rejectedRequests"] = 0;
 stats["incomingRequests"] = 0;
+stats.serverVersion = version;
 
 if (use_https) {
   var privateKey = fs.readFileSync(PATH_TLSPrivateKey);
@@ -96,7 +101,21 @@ app.get("*",function (req, res) {
 app.post('/pinproxy/:id',function(req,res){
 
   stats["incomingRequests"] += 1;
-	pin = JSON.parse(req.rawBody);
+
+
+  if (req.rawBody == null || req.rawBody == "") {
+	res.status(400)
+	endAndLog("Request body was blank!", res);
+	return
+  }
+
+  try {
+	  pin = JSON.parse(req.rawBody);
+  } catch(e) {
+          res.status(400);
+	  endAndLog("JSON Parse error: " + e, res);
+	  return;
+  }
 
   //Check that everything is there
   if (pin.id == null || pin.id == "") {
@@ -166,6 +185,12 @@ app.post('/pinproxy/:id',function(req,res){
 
   log(`${pin.id}::validatePin::pinValid`)
 
+  // log(`${pin.id}::ifttt::escapePin`);
+  // pin.layout.title = entities.encode(pin.layout.title);
+  // pin.layout.subtitle = entities.encode(pin.layout.subtitle);
+  // pin.layout.body = entities.encode(pin.layout.body);
+  // log(`${pin.id}::ifttt::escapePin::pinEscaped`);
+
   //If we're here, all is good.
   submitPinToRWS(pin,submitPinToRWS_cb, submitPinToRWS_ecb, res);
 
@@ -176,7 +201,22 @@ app.post('/pinproxy-ifttt',function(req,res){
   stats["incomingRequests"] += 1;
   //Designed to be used as a proxy for ifttt webhooks, we'll generate the token here
 
-	pin = JSON.parse(req.rawBody);
+  if (debug) {
+	log("ifttt:start::parse: " + req.rawBody);
+  }
+
+  if (req.rawBody == null || req.rawBody == "") {
+	res.status(400)
+	endAndLog("Request body was blank!", res);
+	return
+  }
+  try {
+	  pin = JSON.parse(req.rawBody);
+  } catch(e) {
+	  res.status(400)
+	  endAndLog("JSON Parse error: " + e, res);
+	  return
+  }
 
   pin.id = "ws-ifttt-" + uuidv4();
 
@@ -250,6 +290,13 @@ app.post('/pinproxy-ifttt',function(req,res){
 
   log(`${pin.id}::ifttt::validatePin::pinValid`)
 
+  log(`${pin.id}::ifttt::escapePin`);
+  fields = ["title","body","subtitle"]
+  for(let i = 0; i < fields.length; i++){
+    pin["layout." + fields[i].toString()] = escape(pin["layout." + fields[i].toString()]);
+  }
+  log(`${pin.id}::ifttt::escapePin::pinEscaped`);
+
 
   var time = new Date();
 
@@ -272,6 +319,8 @@ function submitPinToRWS(pinData, callBack, errorCallBack, callBackObject ) {
   log(`${pin.id}::submitPin`)
 
   var data = JSON.stringify(pinData)
+
+  // data = encodeURI(data);
 
   //hostname: 'local.will0.id',
   const options = {
@@ -324,6 +373,7 @@ function submitPinToRWS_cb(data, cbo) {
 }
 function submitPinToRWS_ecb(data, cbo) {
   cbo.status(500);
+  log("RWS Error msg: " + data);
   cbo.end("Rebble Web Services returned the following error: " + data);
 }
 
