@@ -16,9 +16,9 @@ function createmsg(style, message) {
   <button type="button" class="close" data-dismiss="alert" aria-label="Close">\
     <span aria-hidden="true">&times;</span>\
   </button>\
-  </div>'
-  );
+</div>');
 }
+
 
 function apiPOST(rurl, postdata, callback, errorCallback, callBackObject) {
 	console.log("POST: " + rurl + " - Data: " + postdata)
@@ -95,19 +95,6 @@ function createPin() {
   pin.layout.subtitle = $('#pinSubtitle').val();
   pin.layout.tinyIcon = "system://images/" + $('#pinIcon').val();
   pin.token = $('#timelineToken').val();
-
-  if ($('#includeNotification').is(':checked')) {
-    pin.reminders = [];
-    var reminderObj = {};
-    reminderObj.time = finalTime;
-    reminderObj.layout = {};
-    reminderObj.layout.type = "genericReminder";
-    reminderObj.layout.title = $('#pinTitle').val();
-    reminderObj.layout.body = $('#pinBody').val();
-    reminderObj.layout.subtitle = $('#pinSubtitle').val();
-    reminderObj.layout.tinyIcon = "system://images/" + $('#pinIcon').val();
-    pin.reminders.push(reminderObj);
-  }
 
   $('#sendbtn').prop("disabled",true);
   $('#msgdiv').html("");
