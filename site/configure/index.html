@@ -1,0 +1,225 @@
+<html>
+	<head>
+		<link href="../main.css" rel="stylesheet">
+		<script src="https://willmurphy.co.uk/static/vendor/jquery/jquery.min.js"></script>
+		<script src="https://use.fontawesome.com/releases/v5.8.2/js/all.js"></script>
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.8.8/css/mdb.min.css" rel="stylesheet">
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.8.8/js/mdb.min.js"></script>
+		<script type="text/javascript" src="../main.js"></script>
+	</head>
+	<body onload="start()">
+
+		<div class="modal fade" id="wtm" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+		aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="exampleModalLabel">How can I get a timeline token?</h5>
+
+				</div>
+				<div class="modal-body">
+					The quickest way is to use the <a href="https://github.com/Willow-Systems/pebble-generate-token">Generate Token app</a>. <br><br>Download and install the .pbw, run the app on your watch, press select to generate a token, then on your phone open the watch app settings to copy the token.
+					<br><br><a href="https://github.com/Willow-Systems/pebble-generate-token/raw/master/generateToken.pbw">- .pbw download link</a>
+					<br><a href="https://apps.rebble.io/en_US/application/5d9ac26dc393f54d6b5f5445">- Appstore Link</a>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+		</div>
+
+		<div class="modal fade" id="jsonmodal" tabindex="-1" role="dialog" aria-labelledby="JSON-Modal"
+		aria-hidden="true">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Create a new ifttt webhook with the following options</h5>
+				</div>
+				<div class="modal-body">
+					<div class="container">
+
+						<div class="row">
+							<div class="col-2"><b>URL:</b></div>
+							<div class="col-6"><div id="resulturl">https://willow.systems/pinproxy-ifttt/</div></div>
+						</div>
+						<hr>
+
+						<div class="row">
+							<div class="col-2"><b>Method:</b></div>
+							<div class="col-6">POST</div>
+						</div>
+						<hr>
+
+						<div class="row">
+							<div class="col-2"><b>Content-Type:</b></div>
+							<div class="col-6">application/json</div>
+						</div>
+						<hr>
+
+						<div class="row">
+							<div class="col-2"><b>Body:</b></div>
+							<div class="col-6"><div id="resultbody"></div></div>
+						</div>
+
+
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+		</div>
+
+		<div class="container center"><br>
+			<h1> IFTTT Pin Proxy <span class="smol">V2</span></h1>
+			<a href="https://willow.systems/integrate-pebble-with-ifttt-once-again/">for rebble + ifttt (<i class="fab fa-readme"></i>)</a>
+			<br><br>
+			<center>
+			<div class="smaller">
+
+					<small id="helper" class="form-text text-muted" onclick="$('#wtm').modal('toggle')">What's this?</small>
+ 			    <input type="text" id="timelineToken" class="form-control mb-4" placeholder="Timeline Token" style="">
+
+		      <input type="text" id="pinTitle" class="form-control mb-4" placeholder="Pin Title">
+
+					<input type="text" id="pinSubtitle" class="form-control mb-4" placeholder="Pin Subtitle">
+
+			    <textarea id="pinBody" class="form-control mb-4" placeholder="Pin Body"></textarea>
+
+			    <label for="pinTime">When the request is made, create a pin</label>
+			    <select class="browser-default custom-select mb-4" id="pinTime">
+			        <option value="1">Immediately</option>
+			        <option value="2">for 30 minutes later</option>
+			        <option value="3">for 60 minutes later</option>
+							<option value="4">for 3 hours later</option>
+							<option value="A">at a specific time</option>
+			    </select>
+
+					<div id="advancedTime">
+					Set the pin time to the next occurence of
+					<table><tr><td class="timebox">
+						<input type="text" id="specific-hour" class="smalltext form-control mb-4 ctime" placeholder="hh" style="">
+					</td><td style="padding-bottom: 25px;">:</td><td class="timebox">
+						<input type="text" id="specific-minute" class="smalltext form-control mb-4 ctime" placeholder="mm" style="">
+					</td><td class="dim">&nbsp 00:00 - 23:59</td></tr></table>
+					</div>
+
+					<label for="pinIcon">Pin Icon</label>
+ 				 	<div class="row">
+ 				 	<div class="col-sm-1">
+ 				 	<img class="piniconimg" id="IconPreview" src="../img/NOTIFICATION_GENERIC.svg"><img>
+ 				 	</div>
+ 				 	<div class="col-sm-11">
+			    <select class="browser-default custom-select mb-4" id="pinIcon">
+			        <option value="NOTIFICATION_GENERIC">NOTIFICATION_GENERIC</option>
+			        <option value="NOTIFICATION_FLAG">NOTIFICATION_FLAG</option>
+			        <option value="NOTIFICATION_LIGHTHOUSE">NOTIFICATION_LIGHTHOUSE</option>
+							<option value="GENERIC_EMAIL">GENERIC_EMAIL</option>
+							<option value="GENERIC_SMS">GENERIC_SMS</option>
+							<option value="GENERIC_WARNING">GENERIC_WARNING</option>
+							<option value="GENERIC_CONFIRMATION">GENERIC_CONFIRMATION</option>
+							<option value="GENERIC_QUESTION">GENERIC_QUESTION</option>
+							<option value="PARTLY_CLOUDY">PARTLY_CLOUDY</option>
+							<option value="CLOUDY_DAY">CLOUDY_DAY</option>
+							<option value="LIGHT_SNOW">LIGHT_SNOW</option>
+							<option value="LIGHT_RAIN">LIGHT_RAIN</option>
+							<option value="HEAVY_RAIN">HEAVY_RAIN</option>
+							<option value="HEAVY_SNOW">HEAVY_SNOW</option>
+							<option value="TIMELINE_WEATHER">TIMELINE_WEATHER</option>
+							<option value="TIMELINE_SUN">TIMELINE_SUN</option>
+							<option value="RAINING_AND_SNOWING">RAINING_AND_SNOWING</option>
+							<option value="TIMELINE_MISSED_CALL">TIMELINE_MISSED_CALL</option>
+							<option value="TIMELINE_CALENDAR">TIMELINE_CALENDAR</option>
+							<option value="TIMELINE_SPORTS">TIMELINE_SPORTS</option>
+							<option value="TIMELINE_BASEBALL">TIMELINE_BASEBALL</option>
+							<option value="AMERICAN_FOOTBALL">AMERICAN_FOOTBALL</option>
+							<option value="BASKETBALL">BASKETBALL</option>
+							<option value="CRICKET_GAME">CRICKET_GAME</option>
+							<option value="SOCCER_GAME">SOCCER_GAME</option>
+							<option value="HOCKEY_GAME">HOCKEY_GAME</option>
+							<option value="RESULT_DISMISSED">RESULT_DISMISSED</option>
+							<option value="RESULT_DELETED">RESULT_DELETED</option>
+							<option value="RESULT_MUTE">RESULT_MUTE</option>
+							<option value="RESULT_SENT">RESULT_SENT</option>
+							<option value="RESULT_FAILED">RESULT_FAILED</option>
+							<option value="STOCKS_EVENT">STOCKS_EVENT</option>
+							<option value="MUSIC_EVENT">MUSIC_EVENT</option>
+							<option value="BIRTHDAY_EVENT">BIRTHDAY_EVENT</option>
+							<option value="NEWS_EVENT">NEWS_EVENT</option>
+							<option value="SCHEDULED_EVENT">SCHEDULED_EVENT</option>
+							<option value="MOVIE_EVENT">MOVIE_EVENT</option>
+							<option value="NO_EVENTS">NO_EVENTS</option>
+							<option value="PAY_BILL">PAY_BILL</option>
+							<option value="HOTEL_RESERVATION">HOTEL_RESERVATION</option>
+							<option value="TIDE_IS_HIGH">TIDE_IS_HIGH</option>
+							<option value="INCOMING_PHONE_CALL">INCOMING_PHONE_CALL</option>
+							<option value="DURING_PHONE_CALL">DURING_PHONE_CALL</option>
+							<option value="DURING_PHONE_CALL_CENTERED">DURING_PHONE_CALL_CENTERED</option>
+							<option value="DISMISSED_PHONE_CALL">DISMISSED_PHONE_CALL</option>
+							<option value="CHECK_INTERNET_CONNECTION">CHECK_INTERNET_CONNECTION</option>
+							<option value="GLUCOSE_MONITOR">GLUCOSE_MONITOR</option>
+							<option value="ALARM_CLOCK">ALARM_CLOCK</option>
+							<option value="CAR_RENTAL">CAR_RENTAL</option>
+							<option value="DINNER_RESERVATION">DINNER_RESERVATION</option>
+							<option value="RADIO_SHOW">RADIO_SHOW</option>
+							<option value="AUDIO_CASSETTE">AUDIO_CASSETTE</option>
+							<option value="SCHEDULED_FLIGHT">SCHEDULED_FLIGHT</option>
+							<option value="REACHED_FITNESS_GOAL">REACHED_FITNESS_GOAL</option>
+							<option value="DAY_SEPARATOR">DAY_SEPARATOR</option>
+							<option value="WATCH_DISCONNECTED">WATCH_DISCONNECTED</option>
+							<option value="TV_SHOW">TV_SHOW</option>
+							<option value="LOCATION">LOCATION</option>
+			    </select>
+					</div>
+					</div>
+
+					<br>
+					<div class="custom-control custom-checkbox">
+						<input type="checkbox" class="custom-control-input" id="notificationOnArrival">
+						<label class="custom-control-label" for="notificationOnArrival">Show a notification when pin is first recieved</label>
+					</div>
+					<div class="custom-control custom-checkbox">
+						<input type="checkbox" class="custom-control-input" id="includeNotification">
+						<label class="custom-control-label" for="includeNotification">Show a reminder when pin becomes active</label>
+					</div>
+
+
+			    <button class="btn btn-primary my-4" onclick="createPin()" id="sendbtn">Generate JSON</button><small class="dim"><a href="https://willow.systems/integrate-pebble-with-ifttt-once-again/">or, tell me how to use this</a></small>
+					<br>
+					<div id="msgdiv"></div>
+					<br><br><br><br>
+			</div>
+			</center>
+		</div>
+		<div class="footer"> Willow Systems | <a href="https://github.com/Willow-Systems/pebble-pin-generator">Source Code</a> </div>
+	</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'

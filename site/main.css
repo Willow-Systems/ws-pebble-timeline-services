@@ -1,5 +1,7 @@
 body {
 	font-family: "Roboto","sans-serif";
+		padding: 10px;
+		overflow-x: hidden;
 }
 .center {
 	text-align: center;
@@ -7,16 +9,23 @@ body {
 .smaller {
 	max-width: 70%;
 	text-align: left;
-	}
+}
 small {
 	cursor: pointer;
 }
+.smalltext {
+	font-size: 14px !important;
+}
 .footer {
-	position: absolute;
+	/* position: absolute;
 	bottom: 0;
 	height: 40px;
 	margin-top: 40px;
 	width: 100%;
+	text-align: center; */
+	width: 100%;
+	height : 60px;
+	display: inline-block;
 	text-align: center;
 }
 .spinner-border {
@@ -32,4 +41,66 @@ small {
 .btn-fixed {
 	width: 20%;
 	margin-top: 20px;
+}
+.piniconimg {
+	height: 100%;
+	width: 100%;
+	min-width: 25px;
+	min-height: 25px;
+	margin: 5%;
+	box-shadow: none;
+	margin-bottom: 50px;
+}
+.col-sm-1 {
+	max-height: 35px;
+	margin-bottom: 25px;
+}
+.custom-checkbox {
+	/* margin-top: 30px; */
+	margin: 0px;
+	margin-left: 5px;
+}
+.timebox {
+	width: 50px;
+}
+table {
+	margin-top: 15px;
+}
+.dim {
+	color: #AAA;
+	padding-bottom: 25px;
+}
+.form-control, select, .alert {
+	border-radius: 0px !important;
+}
+.smol {
+	font-size: 18px;
+}
+.smoller {
+	font-size: 10px;
+}
+.title {
+	font-family: Lato, Helvetica, Arial, sans-serif !important;
+	font-weight: 700;
+	text-transform: uppercase;
+	font-size: 28px;
+	color: black;
+}
+.light-ul {
+	font-weight: 200;
+	padding-left: 0px;
+	margin-left: 0px;
+	list-style-type: none;
+	font-size: 13px;
+	margin-top: 5px;
+}
+
+.fa-check {
+	color: green;
+}
+.fa-key, .fa-exclamation-triangle {
+	color: goldenrod;
+}
+.fa-times, .fa-bug, .fa-code {
+	color: red;
 }
