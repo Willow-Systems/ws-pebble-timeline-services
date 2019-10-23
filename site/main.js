@@ -69,10 +69,10 @@ function createPin() {
     return;
   }
   if ($('#pinTime').val() == "A") {
-    if ($('#specific-hour').length < 2) {
+    if ($('#specific-hour').val().length < 2) {
         $('#specific-hour').val("0" + $('#specific-hour').val())
     }
-    if ($('#specific-minute').length < 2) {
+    if ($('#specific-minute').val().length < 2) {
         $('#specific-minute').val("0" + $('#specific-minute').val())
     }
 
