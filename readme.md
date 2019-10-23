@@ -1,5 +1,5 @@
 # Pebble - Timeline Services Server
-Version 1.5
+Version 1.8
 ## About
 
 This server runs the collection of pebble timeline services on https://willow.systems/pebble/. This includes timeline tester, and the ifttt-proxy server.
@@ -9,6 +9,10 @@ Timeline Tester is a simple webapp that lets you easily create a timeline pin fo
 It also has a server component which proxies pin requests, both for timeline-tester and for [ifttt integration](https://willow.systems/integrate-pebble-with-ifttt-once-again/)
 
 The production tool is available at https://willow.systems/pebble/timeline-tester/
+
+The feature documentation is at https://willow.systems/integrate-pebble-with-ifttt-once-again/
+
+The Release 2 (Server 1.8) feature documentation is at https://willow.systems/pinproxy-v2-released/
 
 ## The code
 
