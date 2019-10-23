@@ -38,7 +38,7 @@ function apiGet(url, callback, errorCallback, callBackObject) {
 function generateDebugTable() {
   $('#outputTable').html("Fetching...");
   var token = $('#token').val();
-  apiGet("http://127.0.0.1:8080/pinproxy/debug/" + token, generateDebugTable_cb, null)
+  apiGet("https://willow.systems/pinproxy/debug/" + token, generateDebugTable_cb, null)
 }
 
 function httpCodeToSymbol(code) {
