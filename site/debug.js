@@ -36,9 +36,14 @@ function apiGet(url, callback, errorCallback, callBackObject) {
 }
 
 function generateDebugTable() {
-  $('#outputTable').html("Fetching...");
   var token = $('#token').val();
-  apiGet("https://willow.systems/pinproxy/debug/" + token, generateDebugTable_cb, null)
+  if (token == null || token == "") {
+      $('#outputTable').html("Paste your timeline token above.");
+      setTimeout(function() {$('#outputTable').html("");},2000);
+  } else {
+    $('#outputTable').html("Fetching...");
+    apiGet("https://willow.systems/pinproxy/debug/" + token, generateDebugTable_cb, null)
+  }
 }
 
 function httpCodeToSymbol(code) {
