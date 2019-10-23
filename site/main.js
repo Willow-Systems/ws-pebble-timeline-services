@@ -18,29 +18,28 @@ function createmsg(style, message) {
   </button>\
 </div>');
 }
+function is_timeString(str) {
+ regexp = /^([0-1][0-9]|2[0-3]):([0-5][0-9])$/;
+ return (regexp.test(str))
+}
+function timeConvert(n) {
+  var hours = (n / 60);
+  var rhours = Math.floor(hours);
+  var minutes = (hours - rhours) * 60;
+  var minutes = Math.round(minutes);
+  var time = {}
+  time.minutes = minutes;
+  time.hours = rhours;
 
+  if (time.minutes.toString().length == 1) {
+    time.minutes = "0" + time.minutes
+  }
 
-function apiPOST(rurl, postdata, callback, errorCallback, callBackObject) {
-	console.log("POST: " + rurl + " - Data: " + postdata)
-	var xmlHttp = new XMLHttpRequest();
-	xmlHttp.onreadystatechange = function() {
-	if (xmlHttp.readyState == 4 && RegExp('2.*').test(xmlHttp.status)) {
-		if (callBackObject != null) {
-			callback(xmlHttp.responseText, callBackObject);
-		} else {
-			callback(xmlHttp.responseText);
-    }
-	} else if (xmlHttp.readyState == 4) {
-           console.log("Error Code: " + xmlHttp.status)
-           if (errorCallback != null) {
-	   	errorCallback(xmlHttp.responseText);
-       	   }
-	}
-    }
-    xmlHttp.open("POST", rurl, true); // true for asynchronous
-    xmlHttp.setRequestHeader("Content-Type", "application/json");
-    xmlHttp.setRequestHeader("X-User-Token", token);
-    xmlHttp.send(postdata);
+  if (time.hours.toString().length == 1) {
+    time.hours = "0" + time.hours
+  }
+
+  return time;
 }
 
 function sanityError(com, name) {
@@ -48,6 +47,13 @@ function sanityError(com, name) {
   createmsg("danger", name + " has an invalid or missing value");
   $('#' + com).focusout(function() {
     $('#' + com).removeClass("error");
+  });
+}
+function sanityErrorByClass(com, name) {
+  $('.' + com).addClass("error");
+  createmsg("danger", name + " has an invalid or missing value");
+  $('.' + com).focusout(function() {
+    $('.' + com).removeClass("error");
   });
 }
 
@@ -62,81 +68,103 @@ function createPin() {
     sanityError("pinTitle", "Pin Title");
     return;
   }
+  if ($('#pinTime').val() == "A") {
+    if ($('#specific-hour').val().length < 2) {
+        $('#specific-hour').val("0" + $('#specific-hour').val())
+    }
+    if ($('#specific-minute').val().length < 2) {
+        $('#specific-minute').val("0" + $('#specific-minute').val())
+    }
 
-
-  var finalTime;
-  var time = new Date();
-
-  switch ($('#pinTime').val()) {
-    case "2":
-      time = addMinutes(time, 30);
-    break;
-    case "3":
-      time = addMinutes(time, 60);
-    break;
-    case "4":
-      time = subMinutes(time, 30);
-    break;
-    case "5":
-      time = subMinutes(time, 60);
-    break;
+    if (is_timeString($('#specific-hour').val() + ":" + $('#specific-minute').val()) == false) {
+      sanityErrorByClass("ctime", "Custom time");
+      return;
+    }
   }
 
-  finalTime = time.toISOString();
+
 
   var pin = {};
-  pin.id = "ws-tester-" + uuidv4();
+  // pin.id = "ws-ifttt-" + uuidv4();
   // pin.id = "123";
-  pin.time = finalTime;
+
+  pin.time = $('#pinTime').val();
+
+  if (pin.time == "A") {
+    //It's the 'advanced time'
+
+    var offset = new Date().getTimezoneOffset();
+
+    var mins = parseInt($('#specific-minute').val()) + (parseInt($('#specific-hour').val())*60)
+
+    if (offset[0] == "-") {
+      mins = mins - parseInt(offset)
+    } else {
+      mins = mins + parseInt(offset)
+    }
+
+    var time = timeConvert(mins);
+
+
+    if (pin.meta == null || pin.meta == "") {
+      pin.meta = {}
+    }
+
+    pin.meta.clocktime = {};
+
+    pin.meta.clocktime.hour = time.hours;
+    pin.meta.clocktime.minute = time.minutes;
+
+  }
   pin.layout = {};
   pin.layout.type = "genericPin";
-  pin.layout.title = $('#pinTitle').val();
-  pin.layout.body = $('#pinBody').val();
-  pin.layout.subtitle = $('#pinSubtitle').val();
+
+  if ($('#pinTitle').val() != null && $('#pinTitle').val() != "") {
+    //pin.layout.title = "&lt;&lt;&lt;" + $('#pinTitle').val() + "&gt;&gt;&gt;";
+    pin.layout.title = $('#pinTitle').val();
+  } else {
+    pin.layout.title = "";
+  }
+
+  if ($('#pinBody').val() != null && $('#pinBody').val() != "") {
+    //pin.layout.body = "&lt;&lt;&lt;" + $('#pinBody').val() + "&gt;&gt;&gt;";
+    pin.layout.body = $('#pinBody').val();
+  } else {
+    pin.layout.body = "";
+  }
+
+  if ($('#pinSubtitle').val() != null && $('#pinSubtitle').val() != "") {
+    //pin.layout.subtitle = "&lt;&lt;&lt;" + $('#pinSubtitle').val() + "&gt;&gt;&gt;";
+    pin.layout.subtitle = $('#pinSubtitle').val();
+  } else {
+    pin.layout.subtitle = "";
+  }
+
+  //Notifications
+  if ($('#notificationOnArrival').prop("checked")) {
+    if (pin.meta == null || pin.meta == "") {
+      pin.meta = {}
+    }
+    pin.meta.notifyOnArrival = true;
+  }
+
+  if ($('#includeNotification').prop("checked")) {
+    if (pin.meta == null || pin.meta == "") {
+      pin.meta = {}
+    }
+    pin.meta.notifyOnActive = true;
+  }
+
+  // pin.layout.subtitle = "<<<" + $('#pinSubtitle').val() + ">>>";
   pin.layout.tinyIcon = "system://images/" + $('#pinIcon').val();
   pin.token = $('#timelineToken').val();
 
-  $('#sendbtn').prop("disabled",true);
-  $('#msgdiv').html("");
-  $('#sendbtn').removeClass("btn-info");
-  $('#sendbtn').addClass("btn-warning");
-  $('#sendbtn').html('Sending Pin  <div class="spinner-border" role="status"></div>');
-
   token = pin.token;
 
-  postdata = JSON.stringify(pin);
+  $('#resultbody').html(JSON.stringify(pin));
 
-  apiPOST("https://local.will0.id:444/pinproxy/" + pin.id, postdata, createPinCB, errorCB, pin);
-  // apiPUT("https://willow.systems:444/pinproxy/" + pin.id, postdata, createPinCB, errorCB, pin);
+  $('#jsonmodal').modal("show");
 
-}
-function createPinCB(d) {
-  $('#sendbtn').addClass("btn-success");
-  $('#sendbtn').removeClass("btn-warning");
-  $('#sendbtn').html('Success');
-
-  createmsg("info", "Pin created! It may take up to 30 mins to appear for rebble subscribers, for non-subscribers up to 3 hours");
-
-  $('#pinTitle').val("");
-  $('#pinSubtitle').val("");
-  $('#pinBody').val("");
-
-  setTimeout(function() {
-    $('#sendbtn').prop("disabled",false);
-    $('#sendbtn').removeClass("btn-success");
-    $('#sendbtn').addClass("btn-info");
-    $('#sendbtn').html('CREATE PIN');
-  }, 1000)
-}
-function errorCB(d) {
-  $('#sendbtn').prop("disabled",false);
-  $('#sendbtn').addClass("btn-info");
-  $('#sendbtn').removeClass("btn-warning");
-  $('#sendbtn').html('CREATE PIN');
-  $('#pinTitle').val("");
-  $('#pinSubtitle').val("");
-  $('#pinBody').val("");
-  createmsg("warning", "Error: " + d);
 }
 
 function setSetting(setting, value) {
@@ -154,5 +182,29 @@ function start() {
   }
   $('#timelineToken').focusout(function() {
     setSetting("token",$('#timelineToken').val());
+  });
+
+  $( "#pinIcon" ).change(function() {
+
+    //Specical case for currently missing images
+    var noPicArray = ["GENERIC_SMS","GENERIC_EMAIL"];
+
+    if (noPicArray.includes($('#pinIcon').val())) {
+      $("#IconPreview").prop("src","../img/NO_PREVIEW.png");
+    } else {
+      $("#IconPreview").prop("src","../img/" + $('#pinIcon').val() + ".svg");
+    }
+
+  });
+
+  if ($('#pinTime').val() != "A") { $('#advancedTime').hide(); }
+  $("#IconPreview").prop("src","../img/" + $('#pinIcon').val() + ".svg");
+
+  $("#pinTime").change(function() {
+    if ($('#pinTime').val() == "A") {
+      $('#advancedTime').show();
+    } else {
+      $('#advancedTime').hide();
+    }
   });
 }
