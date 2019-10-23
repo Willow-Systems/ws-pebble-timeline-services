@@ -408,6 +408,9 @@ app.post('/pinproxy-ifttt',function(req,res){
   pin.time = time.toISOString();
 
   //Create notifications
+  if (pin.meta == null) {
+	  pin.meta = {};
+  }
 
   if (pin.meta.notifyOnArrival != null && pin.meta.notifyOnArrival == true) {
     //Create an arrival notification
