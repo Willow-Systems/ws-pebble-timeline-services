@@ -61,9 +61,12 @@
 						<hr>
 
 						<div class="row">
-							<div class="col-2"><b>Body:</b></div>
+							<div class="col-2"><b>Body:</b><br>
+							<button onclick="copyJSToClipboard()" id="copybtn" style="font-size: 10px;padding: 2px" class="btn btn-light">Copy to clipboard</button></div>
 							<div class="col-6"><div id="resultbody"></div></div>
 						</div>
+
+						<input id="copyTextHolder" type="text" hidden></input>
 
 
 					</div>
