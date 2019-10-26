@@ -42,6 +42,21 @@ function timeConvert(n) {
   return time;
 }
 
+function copyJSToClipboard() {
+  $('#copybtn').removeClass("btn-light");
+  $('#copybtn').addClass("btn-success");
+  setTimeout(function() {
+    $('#copybtn').addClass("btn-light");
+    $('#copybtn').removeClass("btn-success");
+  }, 1000)
+  // var copyText = ;
+  $('#copyTextHolder').val($('#resultbody').html().toString());
+  $('#copyTextHolder').select();
+  document.execCommand("copy");
+  $('#copyTextHolder').setSelectionRange(0, 99999); /*For mobile devices*/
+  document.execCommand("copy");
+}
+
 function sanityError(com, name) {
   $('#' + com).addClass("error");
   createmsg("danger", name + " has an invalid or missing value");
