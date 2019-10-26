@@ -43,6 +43,7 @@ function timeConvert(n) {
 }
 
 function copyJSToClipboard() {
+  $('#copyTextHolder').attr("hidden",false);
   $('#copybtn').removeClass("btn-light");
   $('#copybtn').addClass("btn-success");
   setTimeout(function() {
@@ -53,8 +54,10 @@ function copyJSToClipboard() {
   $('#copyTextHolder').val($('#resultbody').html().toString());
   $('#copyTextHolder').select();
   document.execCommand("copy");
-  $('#copyTextHolder').setSelectionRange(0, 99999); /*For mobile devices*/
-  document.execCommand("copy");
+  //$('#copyTextHolder').setSelectionRange(0, 99999); /*For mobile devices*/
+  //document.execCommand("copy");
+  $('#copyTextHolder').attr("hidden",true);
+
 }
 
 function sanityError(com, name) {
