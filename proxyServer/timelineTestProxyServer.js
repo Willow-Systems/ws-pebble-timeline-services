@@ -1,10 +1,10 @@
 const express = require('express');
-const https = require('https');
+const http = require('http');
 const fs = require('fs');
 const cors = require('cors');
 const app = express();
 
-version = 1.8;
+version = 1.9;
 
 //Port to listen on
 const port = 8080;
@@ -14,7 +14,7 @@ debug = true
 
 //Don't actually send the pin to rws
 //Logs result as 200
-debug_disable_rws_callout = true
+debug_disable_rws_callout = false
 
 //If you're not running this behind a reverse proxy, you should use https
 use_https = false
@@ -456,14 +456,17 @@ function submitPinToRWS(pinData, callBack, errorCallBack, callBackObject ) {
 
   log(`${pin.id}::submitPin`)
 
+  //Remove any spaces from the token
+  pinData.token = pinData.token.toString().replace(/ /g,"");
+
   var data = JSON.stringify(pinData)
 
   // data = encodeURI(data);
 
   //hostname: 'local.will0.id',
   const options = {
-    hostname: 'timeline-api.rebble.io',
-    port: 443,
+    hostname: '192.168.3.29',
+    port: 5000,
     path: '/v1/user/pins/' + pinData.id,
     method: 'PUT',
     headers: {
@@ -488,7 +491,7 @@ function submitPinToRWS(pinData, callBack, errorCallBack, callBackObject ) {
 
   } else {
 
-    const req = https.request(options, (res) => {
+    const req = http.request(options, (res) => {
 
       log(`${pinData.id}::submitPin::rwscode:${res.statusCode}`)
       stats[res.statusCode.toString()] += 1;
