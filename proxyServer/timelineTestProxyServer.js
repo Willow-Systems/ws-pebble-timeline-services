@@ -7,14 +7,14 @@ const app = express();
 version = 1.8;
 
 //Port to listen on
-const port = 8081;
+const port = 8080;
 
 //More logging
-debug = false
+debug = true
 
 //Don't actually send the pin to rws
 //Logs result as 200
-debug_disable_rws_callout = false
+debug_disable_rws_callout = true
 
 //If you're not running this behind a reverse proxy, you should use https
 use_https = false
