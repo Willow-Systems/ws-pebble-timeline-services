@@ -7,14 +7,14 @@ const app = express();
 version = 1.8;
 
 //Port to listen on
-const port = 8080;
+const port = 8081;
 
 //More logging
-debug = true
+debug = false
 
 //Don't actually send the pin to rws
 //Logs result as 200
-debug_disable_rws_callout = true
+debug_disable_rws_callout = false
 
 //If you're not running this behind a reverse proxy, you should use https
 use_https = false
@@ -468,7 +468,7 @@ function submitPinToRWS(pinData, callBack, errorCallBack, callBackObject ) {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'Content-Length': data.length,
+      'Content-Length': Buffer.byteLength(data),
       'X-User-Token': pinData.token
     }
   }
