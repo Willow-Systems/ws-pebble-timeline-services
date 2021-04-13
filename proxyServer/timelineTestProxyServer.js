@@ -468,7 +468,7 @@ function submitPinToRWS(pinData, callBack, errorCallBack, callBackObject ) {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'Content-Length': data.length,
+      'Content-Length': Buffer.byteLength(data),
       'X-User-Token': pinData.token
     }
   }
