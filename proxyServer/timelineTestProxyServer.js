@@ -14,7 +14,7 @@ debug = true
 
 //Don't actually send the pin to rws
 //Logs result as 200
-debug_disable_rws_callout = true
+debug_disable_rws_callout = false
 
 //If you're not running this behind a reverse proxy, you should use https
 use_https = false
@@ -302,7 +302,7 @@ app.post('/pinproxy-ifttt', function(req, res) {
         return
     }
 
-    if (pin.layout.type != "genericPin") {
+    if (["genericPin","weatherPin"].indexOf(pin.layout.type) == -1) {
         res.status(400);
         endAndLog("Pin Layout is blank or set to a currently unsupported type", res);
         return
@@ -339,6 +339,23 @@ app.post('/pinproxy-ifttt', function(req, res) {
         res.status(400);
         res.end("Pin icon is missing");
         return
+    }
+
+    if (pin.layout.type == "weatherPin") {
+
+      var subTitleTest = new RegExp('[0-9]+°*');
+      if (! subTitleTest.test(pin.layout.subtitle)) {
+        res.status(400);
+        endAndLog("Pin subtitle can only contain numbers and the degrees symbol when type is weatherPin", res);
+        return
+      }
+
+      if (pin.layout.locationName == null) {
+        res.status(400);
+        endAndLog("pin.layout.locationName is missing", res);
+        return
+      }
+
     }
 
 
@@ -440,7 +457,6 @@ app.post('/pinproxy-ifttt', function(req, res) {
 
     //If we're here, all is good.
     submitPinToRWS(pin, submitPinToRWS_cb, submitPinToRWS_ecb, res);
-
 
 });
 
