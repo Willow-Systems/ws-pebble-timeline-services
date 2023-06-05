@@ -14,7 +14,7 @@ debug = true
 
 //Don't actually send the pin to rws
 //Logs result as 200
-debug_disable_rws_callout = true
+debug_disable_rws_callout = false
 
 //If you're not running this behind a reverse proxy, you should use https
 use_https = false
@@ -302,7 +302,7 @@ app.post('/pinproxy-ifttt', function(req, res) {
         return
     }
 
-    if (pin.layout.type != "genericPin") {
+    if (["genericPin","weatherPin"].indexOf(pin.layout.type) == -1) {
         res.status(400);
         endAndLog("Pin Layout is blank or set to a currently unsupported type", res);
         return
@@ -339,6 +339,23 @@ app.post('/pinproxy-ifttt', function(req, res) {
         res.status(400);
         res.end("Pin icon is missing");
         return
+    }
+
+    if (pin.layout.type == "weatherPin") {
+
+      var subTitleTest = new RegExp('[0-9]+°*');
+      if (! subTitleTest.test(pin.layout.subtitle)) {
+        res.status(400);
+        endAndLog("Pin subtitle can only contain numbers and the degrees symbol when type is weatherPin", res);
+        return
+      }
+
+      if (pin.layout.locationName == null) {
+        res.status(400);
+        endAndLog("pin.layout.locationName is missing", res);
+        return
+      }
+
     }
 
 
@@ -441,6 +458,203 @@ app.post('/pinproxy-ifttt', function(req, res) {
     //If we're here, all is good.
     submitPinToRWS(pin, submitPinToRWS_cb, submitPinToRWS_ecb, res);
 
+});
+app.post('/pinproxy/:id',function(req,res){
+
+  stats["incomingRequests"] += 1;
+	pin = JSON.parse(req.rawBody);
+
+  //Check that everything is there
+  if (pin.id == null || pin.id == "") {
+    res.status(400);
+    res.end("Pin ID missing");
+  }
+
+  log(`${pin.id}::createPin`);
+  log(`${pin.id}::validatePin`);
+
+  if (req.params.id != pin.id) {
+    res.status(400);
+    res.end("Pin ID in JSON doesn't match Pin ID in request URL");
+    return
+  }
+
+  if (pin.time == null || pin.time == "") {
+    res.status(400);
+    res.end("Pin Time missing");
+    return
+  }
+
+  if (pin.layout == null) {
+    res.status(400);
+    res.end("Pin Layout is blank");
+    return
+  }
+
+  if (["genericPin","weatherPin"].indexOf(pin.layout.type) == -1) {
+    res.status(400);
+    res.end("Pin Layout is blank or set to a currently unsupported type");
+    return
+  }
+
+  if (pin.layout.title == null) {
+    pin.layout.title = ""
+  }
+  if (pin.layout.title != null && pin.layout.title.toString().length > 512) {
+    res.status(413);
+    endAndLog("Pin Title is too long (Max 512 character)", res);
+    return
+  }
+
+  if (pin.layout.body == null) {
+    pin.layout.body = ""
+  }
+  if (pin.layout.body != null && pin.layout.body.toString().length > 512) {
+    res.status(413);
+    endAndLog("Pin Body is too long (Max 512 character)", res);
+    return
+  }
+
+  if (pin.layout.subtitle == null) {
+    pin.layout.subtitle = ""
+  }
+  if (pin.layout.subtitle != null && pin.layout.subtitle.toString().length > 512) {
+    res.status(413);
+    endAndLog("Pin Subtitle is too long (Max 512 character)", res);
+    return
+  }
+
+  weatherSubtitleTest = new RegExp('[0-9]+°*');
+  if (pin.layout.type == "weatherPin" && ! weatherSubtitleTest.test(pin.layout.subtitle)) {
+	  res.status(400)
+	  endAndLog("Pin subtitle may only contain numbers or the degrees symbol when pin type is weathrePin", res)
+	  return
+  }
+
+  if (pin.layout.type == "weatherPin" && pin.layout.locationName == null) {
+	  res.status(400)
+	  end("locationName field is missing")
+	  return
+  }
+
+  if (pin.layout.tinyIcon == null || pin.layout.tinyIcon == "") {
+    res.status(400);
+    res.end("Pin icon is missing");
+    return
+  }
+
+  log(`${pin.id}::validatePin::pinValid`)
+
+  //If we're here, all is good.
+  submitPinToRWS(pin,submitPinToRWS_cb, submitPinToRWS_ecb, res);
+
+
+});
+app.post('/pinproxy-ifttt',function(req,res){
+
+  stats["incomingRequests"] += 1;
+  //Designed to be used as a proxy for ifttt webhooks, we'll generate the token here
+
+	pin = JSON.parse(req.rawBody);
+
+  pin.id = "ws-ifttt-" + uuidv4();
+
+  //Check that everything is there
+  log(`${pin.id}::ifttt::createPin`);
+  log(`${pin.id}::ifttt::validatePin`);
+
+  if (pin.time == null || pin.time == "") {
+    res.status(400);
+    endAndLog("Pin Time missing", res);
+    return
+  }
+
+  if (pin.token == null || pin.token == "") {
+    res.status(400);
+    endAndLog("Pin Token missing", res);
+    return
+  }
+
+  if (["1","2","3"].indexOf(pin.time) == -1) {
+    res.status(400);
+    endAndLog("Pin Time is invalid (" + pin.time + ")", res);
+    return
+  }
+
+  if (pin.layout == null) {
+    res.status(400);
+    endAndLog("Pin Layout is blank", res);
+    return
+  }
+
+  if (["genericPin","weatherPin"].indexOf(pin.layout.type) == -1) {
+    res.status(400);
+    endAndLog("Pin Layout is blank or set to a currently unsupported type", res);
+    return
+  }
+
+  if (pin.layout.title == null) {
+    pin.layout.title = ""
+  }
+  if (pin.layout.title.toString().length > 512) {
+    res.status(413);
+    endAndLog("Pin Title is too long (Max 512 character)", res);
+    return
+  }
+
+  if (pin.layout.body == null) {
+    pin.layout.body = ""
+  }
+  if (pin.layout.body != null && pin.layout.body.toString().length > 512) {
+    res.status(413);
+    endAndLog("Pin Body is too long (Max 512 character)", res);
+    return
+  }
+
+  if (pin.layout.subtitle == null) {
+    pin.layout.subtitle = ""
+  }
+  if (pin.layout.subtitle != null && pin.layout.subtitle.toString().length > 512) {
+    res.status(413);
+    endAndLog("Pin Subtitle is too long (Max 512 character)", res);
+    return
+  }
+
+  weatherSubtitleTest = new RegExp('[0-9]+°*');
+  if (pin.layout.type == "weatherPin" && ! weatherSubtitleTest.test(pin.layout.subtitle)) {
+	  res.status(400)
+	  endAndLog("Pin subtitle may only contain numbers or the degrees symbol when pin type is weathrePin", res)
+	  return
+  }
+
+  if (pin.layout.type == "weatherPin" && pin.layout.locationName == null) {
+	  res.status(400)
+	  endAndLog("locationName field is missing", res)
+	  return
+  }
+
+  if (pin.layout.tinyIcon == null || pin.layout.tinyIcon == "") {
+    res.status(400);
+    res.end("Pin icon is missing");
+    return
+  }
+
+
+  log(`${pin.id}::ifttt::validatePin::pinValid`)
+
+
+  var time = new Date();
+
+  if (pin.time == "2") {
+    time = addMinutes(time, 30);
+  } else if (pin.time == "3") {
+    time = addMinutes(time, 60);
+  }
+
+  pin.time = time.toISOString();
+
+  //If we're here, all is good.
+  submitPinToRWS(pin,submitPinToRWS_cb, submitPinToRWS_ecb, res);
 
 });
 
